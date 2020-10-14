@@ -73,10 +73,10 @@ def read_data(file_name):
 def load_init():
     results = {}
     items   = {}
-    for line in open('../data/items.dat','r',encoding='utf8'):
+    for line in open('./items.dat','r',encoding='utf8'):
         itm,id_ = line.strip().split(' ')
         items[itm]=id_
-    for line in open('../data/init.dat','r',encoding='utf8'):
+    for line in open('./init.dat','r',encoding='utf8'):
         itm,state = line.strip().split(' ')
         results[int(items[itm])+1] = [1 if e=='0' else 0 for e in state]
     return results
