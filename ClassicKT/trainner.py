@@ -9,6 +9,8 @@ from dataloader import read_data,DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve,auc,accuracy_score
 
+
+use_cuda = True
 cuda.empty_cache()
 
 
@@ -17,7 +19,8 @@ data = read_data('../classic_kt.dat')
 train_data,test_data = train_test_split(data,test_size=.2)
 
 model = Model(13,64)
-model = model.cuda()
+if use_cuda:
+    model = model.cuda()
 optimizer = optim.Adam(model.parameters(),5e-4)
 
 dl_train = DataLoader(train_data)
@@ -27,7 +30,10 @@ for r in range(10): # 10-epochs
     print('training:')
     for x,y in dl_train.sampling(72):
         i+=1
-        loss = model.forward(tensor(x).cuda(),tensor(y).cuda(),True)
+        if use_cuda:
+            loss = model.forward(tensor(x).cuda(),tensor(y).cuda(),True)
+        else:
+            loss = model.forward(tensor(x),tensor(y),True)
         optimizer.zero_grad()
         clip_grad_value_(model.parameters(),10)
         loss.backward()
@@ -35,13 +41,19 @@ for r in range(10): # 10-epochs
         
         if i%100 == 0:
             loss_val        = loss.data.to('cpu').numpy().tolist()
-            logits,targets  = model.forward(tensor(x).cuda(),tensor(y).cuda(),False)
+            if use_cuda:
+                logits,targets  = model.forward(tensor(x).cuda(),tensor(y).cuda(),False)
+            else:
+                logits,targets  = model.forward(tensor(x),tensor(y),False)
             acc_val = (argmax(logits,axis=1) == targets).mean() 
             print(f'    {r:<5d}--{i:<5d}--{loss_val:.3f}--{acc_val:.3f}%')
     
     y_prob,y_pred,y_true = [],[],[]
     for x,y in dl_test.sampling(100) :
-        logits,targets = model.forward(tensor(x).cuda(),tensor(y).cuda(),False)
+        if use_cuda:
+            logits,targets  = model.forward(tensor(x).cuda(),tensor(y).cuda(),False)
+        else:
+            logits,targets  = model.forward(tensor(x),tensor(y),False)
         y_prob.append(logits[:,1])
         y_pred.append(argmax(logits,1))
         y_true.append(targets)
