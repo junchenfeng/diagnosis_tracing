@@ -7,20 +7,30 @@ from torch.nn.utils import clip_grad_value_
 from dataloader import read_data,DataLoader,load_init
 from cdkt import CDKT
 
+
+use_cuda = True
+
+if use_cuda:
+    cuda.empty_cache()
+
 """ training mode"""
 results = []
 f = 3
-cuda.empty_cache()
+
 model = CDKT()
-model = model.cuda()
+if use_cuda:
+    model = model.cuda()
 
 optimizer = optim.Adam(model.parameters(),5*1e-4)
 DL = DataLoader(read_data(f'../data/train.{f}.dat'),load_init())
 for r in range(10): # 20-epochs
     i = 0
     for x,y in DL.samples(72):
-        X = tensor(x).cuda()
-        Y = tensor(y).cuda()
+        X = tensor(x)
+        Y = tensor(y)
+        if use_cuda:
+            X = X.cuda()
+            Y = Y.cuda()
         loss = model.forward(X,Y,True)
         
         optimizer.zero_grad()
@@ -40,8 +50,11 @@ for r in range(10): # 20-epochs
 results = []
 DL = DataLoader(read_data(f'../data/test.{f}.dat'),load_init())
 for x,y in DL.samples(100):
-    X     = tensor(x).cuda()
-    Y     = tensor(y).cuda()
+    X     = tensor(x)
+    Y     = tensor(y)
+    if use_cuda:
+        X = X.cuda()
+        Y = Y.cuda()
     acc = model.forward(X,Y,False)
     results.append(acc.tolist())
 
