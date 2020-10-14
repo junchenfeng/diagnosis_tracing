@@ -22,7 +22,7 @@ if use_cuda:
     model = model.cuda()
 
 optimizer = optim.Adam(model.parameters(),5*1e-4)
-DL = DataLoader(read_data(f'../data/train.{f}.dat'),load_init())
+DL = DataLoader(read_data(f'/data/train.{f}.dat'),load_init())
 for r in range(10): # 20-epochs
     i = 0
     for x,y in DL.samples(72):
@@ -48,7 +48,7 @@ for r in range(10): # 20-epochs
 
 """on testing """
 results = []
-DL = DataLoader(read_data(f'../data/test.{f}.dat'),load_init())
+DL = DataLoader(read_data(f'/data/test.{f}.dat'),load_init())
 for x,y in DL.samples(100):
     X     = tensor(x)
     Y     = tensor(y)
