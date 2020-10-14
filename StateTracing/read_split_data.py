@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 from sklearn.model_selection import KFold
 
 
@@ -56,6 +57,8 @@ def load_data(file_name,headers=True):
 
 def kfold_split(data,f=8):
     kfold = KFold(n_splits=f,shuffle=True)
+    if not os.path.exists('data'):
+        os.mkdir('data')
     for k,(train_idxs,test_idxs) in enumerate(kfold.split(data)):
         with open(f'data/train.{k+1}.dat','w',encoding='utf8') as f:
             for idx in train_idxs:
