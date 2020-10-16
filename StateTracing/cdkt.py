@@ -71,14 +71,15 @@ class CDKT(nn.Module):
         logits  = dec_states[rows,cols,pos]
         
         # where the item's raw state
-#        with no_grad():
-#            """in mask where 0s means already given by items"""
-#            rows_,cols_,pos_ = where(eq(masks[:,1:,:],0))
-#            targets_ = sources[:,1:,:][rows_,cols_,pos_]
-#        logits_  = dec_states[rows_,cols_,pos_]
+        with no_grad():
+            """in mask where 0s means already given by items"""
+            rows_,cols_ = where(ne(masks[:,1:,:].sum(2),0))
+            targets_    = sources[:,1:,:][rows_,cols_]
+        logits_  = dec_states[rows_,cols_]
         
         if training:
-            return F.cross_entropy(logits,targets)
+            return .9* F.cross_entropy(logits,targets) + .1* F.cross_entropy(logits_.reshape([-1,max_num]),
+                                                                             targets_.flatten())
         else:
             acc = (logits.argmax(1) == targets).float().mean()
             return acc
@@ -89,6 +90,14 @@ class CDKT(nn.Module):
         else:
             with no_grad():
                 return self._forward(sources,masks,False).to('cpu').numpy()
+    
+    def predicts(self,states):
+        with no_grad():
+            batch_size,time_steps,_ = states.size()
+            pstates    = self.encoding(states,False)
+            dec_states = self.dcnn(pstates[:,-1,:].reshape([batch_size,hidden_size,1,1]))
+            dec_states = dec_states.reshape([batch_size,max_num,width,height]).permute(0,2,3,1)
+        return dec_states.to('cpu').numpy()
         
 
 if __name__ == '__main__':
